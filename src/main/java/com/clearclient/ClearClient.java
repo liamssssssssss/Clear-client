@@ -20,7 +20,7 @@ public class ClearClient implements ClientModInitializer {
         openMenu = KeyBindingHelper.registerKeyBinding(new KeyBinding(
             "key.clearclient.open_menu",
             InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_RIGHT_SHIFT,
+            GLFW.GLFW_KEY_RIGHT_CONTROL,
             category
         ));
 
