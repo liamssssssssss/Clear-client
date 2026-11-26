@@ -10,6 +10,7 @@ import org.lwjgl.glfw.GLFW;
 
 public class ClearClient implements ClientModInitializer {
     private static KeyBinding openMenu;
+    private static KeyBinding openMenuFallback;
 
     @Override
     public void onInitializeClient() {
@@ -24,11 +25,23 @@ public class ClearClient implements ClientModInitializer {
             category
         ));
 
+        // F8 is a second, easy-to-find fallback in case another client captures Right Ctrl.
+        openMenuFallback = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+            "key.clearclient.open_menu_fallback",
+            InputUtil.Type.KEYSYM,
+            GLFW.GLFW_KEY_F8,
+            category
+        ));
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            while (openMenu.wasPressed()) {
+            boolean pressed = false;
+            while (openMenu.wasPressed()) pressed = true;
+            while (openMenuFallback.wasPressed()) pressed = true;
+
+            if (pressed && client.player != null) {
                 if (client.currentScreen instanceof ClearClickGui) {
                     client.setScreen(null);
-                } else {
+                } else if (client.currentScreen == null) {
                     client.setScreen(new ClearClickGui());
                 }
             }
