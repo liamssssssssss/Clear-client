@@ -39,7 +39,7 @@ public class ClearClickGui extends Screen {
         drawModule(ctx, x + 122, y + 136, "FPS Counter", true);
         drawModule(ctx, x + 122, y + 168, "Toggle Sprint", false);
 
-        ctx.drawText(textRenderer, "RIGHT SHIFT  •  CLOSE MENU", x + 122, y + h - 25, PURPLE, false);
+        ctx.drawText(textRenderer, "RIGHT CTRL OR F8  •  CLOSE MENU", x + 122, y + h - 25, PURPLE, false);
         super.render(ctx, mouseX, mouseY, delta);
     }
 
