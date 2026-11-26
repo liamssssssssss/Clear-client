@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "clearclient",
+  "version": "${version}",
+  "name": "Clear Client",
+  "description": "A clean, dark-purple Minecraft client-side utility GUI.",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["com.clearclient.ClearClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
