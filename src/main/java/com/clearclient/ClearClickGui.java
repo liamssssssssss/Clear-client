@@ -1,5 +1,6 @@
 package com.clearclient;
 
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
@@ -97,7 +98,10 @@ public class ClearClickGui extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubleClick) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             for (int i = 0; i < MODULES.length; i++) {
                 if (mouseX >= cardX[i] && mouseX <= cardX[i] + cardW
@@ -107,7 +111,7 @@ public class ClearClickGui extends Screen {
                 }
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(click, doubleClick);
     }
 
     @Override
