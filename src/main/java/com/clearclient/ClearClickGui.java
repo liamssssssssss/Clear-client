@@ -16,7 +16,9 @@ public class ClearClickGui extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        renderBackground(ctx, mouseX, mouseY, delta);
+        // Draw a simple dim overlay instead of Minecraft's blurred screen background.
+        // This avoids Dawn/Feather's 'Can only blur once per frame' crash.
+        ctx.fill(0, 0, width, height, 0x90000000);
         int w = 330, h = 230;
         int x = (width - w) / 2, y = (height - h) / 2;
 
