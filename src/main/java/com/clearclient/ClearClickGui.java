@@ -3,12 +3,27 @@ package com.clearclient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
+import org.lwjgl.glfw.GLFW;
 
 public class ClearClickGui extends Screen {
-    private static final int BG = 0xE8101018;
-    private static final int PANEL = 0xF01B1B27;
-    private static final int PURPLE = 0xFF9B6BFF;
-    private static final int MUTED = 0xFFAAA7B8;
+    private static final int WINDOW = 0xF0121318;
+    private static final int PANEL = 0xFF1B1D24;
+    private static final int PANEL_HOVER = 0xFF232631;
+    private static final int PURPLE = 0xFF7565FF;
+    private static final int WHITE = 0xFFF1F1F5;
+    private static final int MUTED = 0xFF858894;
+
+    private static final String[] MODULES = {
+        "Keystrokes HUD", "Coordinates", "FPS Counter", "Toggle Sprint"
+    };
+    private static final String[] DESCRIPTIONS = {
+        "Display movement keys", "Show your position",
+        "Display frames per second", "Keep sprint enabled"
+    };
+    private final boolean[] enabled = { true, true, true, false };
+    private int panelX, panelY, panelW, panelH;
+    private final int[] cardX = new int[4];
+    private int cardY, cardW;
 
     public ClearClickGui() {
         super(Text.literal("Clear Client"));
@@ -16,42 +31,87 @@ public class ClearClickGui extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // Draw a simple dim overlay instead of Minecraft's blurred screen background.
-        // This avoids Dawn/Feather's 'Can only blur once per frame' crash.
+        // Flat overlay: avoids the blur conflict with other client mods.
         ctx.fill(0, 0, width, height, 0x90000000);
-        int w = 330, h = 230;
-        int x = (width - w) / 2, y = (height - h) / 2;
 
-        ctx.fill(x, y, x + w, y + h, BG);
-        ctx.fill(x, y, x + w, y + 2, PURPLE);
-        ctx.fill(x + 10, y + 10, x + 100, y + h - 10, PANEL);
-        ctx.fill(x + 108, y + 10, x + w - 10, y + h - 10, PANEL);
+        panelW = Math.min(520, width - 24);
+        panelH = Math.min(270, height - 24);
+        panelX = (width - panelW) / 2;
+        panelY = (height - panelH) / 2;
 
-        ctx.drawText(textRenderer, "CLEAR", x + 20, y + 22, 0xFFFFFFFF, false);
-        ctx.drawText(textRenderer, "CLIENT", x + 20, y + 34, PURPLE, false);
-        ctx.drawText(textRenderer, "VISUAL", x + 20, y + 66, MUTED, false);
-        ctx.drawText(textRenderer, "UTILITY", x + 20, y + 84, MUTED, false);
-        ctx.drawText(textRenderer, "MOVEMENT", x + 20, y + 102, MUTED, false);
+        ctx.fill(panelX + 3, panelY + 3, panelX + panelW + 3, panelY + panelH + 3, 0x55000000);
+        ctx.fill(panelX, panelY, panelX + panelW, panelY + panelH, WINDOW);
 
-        ctx.drawText(textRenderer, "Welcome to Clear Client", x + 122, y + 22, 0xFFFFFFFF, false);
-        ctx.drawText(textRenderer, "A clean setup. Nothing extra.", x + 122, y + 38, MUTED, false);
+        // Header
+        ctx.fill(panelX, panelY, panelX + panelW, panelY + 1, PURPLE);
+        ctx.drawText(textRenderer, "Clear", panelX + 15, panelY + 13, WHITE, false);
+        ctx.drawText(textRenderer, "CLIENT", panelX + 49, panelY + 14, PURPLE, false);
+        ctx.drawText(textRenderer, "v0.1.0", panelX + panelW - 45, panelY + 15, MUTED, false);
 
-        drawModule(ctx, x + 122, y + 72, "Keystrokes HUD", true);
-        drawModule(ctx, x + 122, y + 104, "Coordinates", true);
-        drawModule(ctx, x + 122, y + 136, "FPS Counter", true);
-        drawModule(ctx, x + 122, y + 168, "Toggle Sprint", false);
+        // Main navigation
+        int navY = panelY + 37;
+        ctx.fill(panelX + 12, navY, panelX + panelW - 12, navY + 1, 0xFF292B34);
+        ctx.drawText(textRenderer, "Modules", panelX + 16, navY + 9, WHITE, false);
+        ctx.drawText(textRenderer, "Config", panelX + 72, navY + 9, MUTED, false);
+        ctx.drawText(textRenderer, "Friends", panelX + 119, navY + 9, MUTED, false);
+        ctx.drawText(textRenderer, "HUD", panelX + 174, navY + 9, MUTED, false);
+        ctx.fill(panelX + 15, navY + 25, panelX + 57, navY + 27, PURPLE);
 
-        ctx.drawText(textRenderer, "RIGHT CTRL OR F8  •  CLOSE MENU", x + 122, y + h - 25, PURPLE, false);
+        // Category strip
+        int categoryY = navY + 39;
+        String[] categories = { "All", "Visual", "Utility", "Movement" };
+        int[] offsets = { 16, 48, 99, 151 };
+        for (int i = 0; i < categories.length; i++) {
+            ctx.drawText(textRenderer, categories[i], panelX + offsets[i], categoryY,
+                i == 0 ? WHITE : MUTED, false);
+        }
+
+        // Module cards
+        int gap = 9;
+        cardW = (panelW - 32 - gap * 3) / 4;
+        cardY = categoryY + 23;
+        for (int i = 0; i < MODULES.length; i++) {
+            int cx = panelX + 16 + i * (cardW + gap);
+            cardX[i] = cx;
+            boolean hovered = mouseX >= cx && mouseX <= cx + cardW
+                && mouseY >= cardY && mouseY <= cardY + 88;
+            ctx.fill(cx, cardY, cx + cardW, cardY + 88, hovered ? PANEL_HOVER : PANEL);
+            ctx.fill(cx, cardY, cx + cardW, cardY + 1, enabled[i] ? PURPLE : 0xFF30323B);
+
+            ctx.fill(cx + 10, cardY + 11, cx + 18, cardY + 19, 0xFF343743);
+            ctx.fill(cx + 12, cardY + 13, cx + 16, cardY + 17, enabled[i] ? PURPLE : MUTED);
+
+            int sx = cx + cardW - 34;
+            int sy = cardY + 11;
+            ctx.fill(sx, sy, sx + 25, sy + 12, enabled[i] ? PURPLE : 0xFF343741);
+            int knobX = enabled[i] ? sx + 15 : sx + 2;
+            ctx.fill(knobX, sy + 2, knobX + 8, sy + 10, 0xFFF4F4F7);
+
+            ctx.drawText(textRenderer, MODULES[i], cx + 9, cardY + 57, WHITE, false);
+            ctx.drawText(textRenderer, DESCRIPTIONS[i], cx + 9, cardY + 70, MUTED, false);
+        }
+
+        ctx.drawText(textRenderer, "Click a module to toggle  -  Right Ctrl / F8 to close",
+            panelX + 16, panelY + panelH - 17, MUTED, false);
         super.render(ctx, mouseX, mouseY, delta);
     }
 
-    private void drawModule(DrawContext ctx, int x, int y, String name, boolean enabled) {
-        ctx.fill(x, y, x + 180, y + 25, 0xFF252532);
-        ctx.drawText(textRenderer, name, x + 9, y + 9, 0xFFEDEAF5, false);
-        int color = enabled ? PURPLE : 0xFF55515F;
-        ctx.fill(x + 157, y + 8, x + 171, y + 17, color);
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            for (int i = 0; i < MODULES.length; i++) {
+                if (mouseX >= cardX[i] && mouseX <= cardX[i] + cardW
+                    && mouseY >= cardY && mouseY <= cardY + 88) {
+                    enabled[i] = !enabled[i];
+                    return true;
+                }
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean shouldPause() { return false; }
+    public boolean shouldPause() {
+        return false;
+    }
 }
